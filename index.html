@@ -1,0 +1,409 @@
+<!--
+  * Tên file: index.html
+  * Vị trí lưu: Thư mục gốc của project (cùng cấp với các file ảnh 1748.jpg, 1749.jpg, 1750.jpg)
+  * Chức năng cơ bản:
+    - Trò chơi kéo thả phân loại thuyền (3 Tab).
+    - Thuyền thả tự do theo tọa độ, lưu vị trí qua LocalStorage.
+    - CÓ ĐÁNH SỐ THỨ TỰ trên từng thuyền.
+    - CÓ THỂ TỰ THAY ĐỔI SỐ LƯỢNG thuyền dễ dàng trong phần Cấu hình.
+-->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trò Chơi Phân Loại Thuyền - Đánh Số</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            touch-action: none; 
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Hình nền */
+        .ocean-bg { background-image: linear-gradient(to bottom, #87CEEB 0%, #4682B4 50%, #1e3a8a 100%); }
+        .factory-bg { background-color: #ffffff; border: 2px solid #e5e7eb; }
+        .river-bg { background: #93c5fd; border-top: 4px solid #60a5fa; position: relative; }
+        
+        .river-waves {
+            position: absolute;
+            top: -20px; left: 0; width: 100%; height: 25px;
+            background-image: radial-gradient(circle at 25px 25px, rgba(255,255,255,0.4) 20px, transparent 21px);
+            background-size: 50px 50px; background-repeat: repeat-x;
+        }
+
+        #boat-layer {
+            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 50;
+        }
+
+        /* KHUNG CHỨA THUYỀN VÀ SỐ THỨ TỰ */
+        .boat-wrapper {
+            position: absolute;
+            width: 80px; 
+            height: 80px;
+            cursor: grab;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+            pointer-events: auto; /* Để có thể kéo thả */
+            transform: translate(-50%, -50%);
+            transition: filter 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .boat-wrapper { width: 130px; height: 130px; }
+        }
+
+        .boat-wrapper:active { cursor: grabbing; }
+
+        .is-dragging {
+            filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.6));
+            transform: translate(-50%, -50%) scale(1.15);
+        }
+
+        /* Hình ảnh thuyền bên trong khung */
+        .boat-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none; /* Tránh giật lag khi kéo chuột vào ảnh */
+        }
+
+        /* NHÃN ĐÁNH SỐ THỨ TỰ TRÊN THUYỀN */
+        .boat-number {
+            position: absolute;
+            bottom: 10%;
+            right: 10%;
+            background-color: white;
+            color: red;
+            border: 2px solid red;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            pointer-events: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        @media (min-width: 768px) {
+            .boat-number {
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
+                border-width: 3px;
+                bottom: 15%;
+                right: 15%;
+            }
+        }
+
+        /* Style cho Tab */
+        .tab-button { transition: all 0.3s ease; }
+        .tab-button.active { background-color: #eff6ff; color: #2563eb; border-bottom: 4px solid #3b82f6; font-weight: bold; }
+        .tab-button.inactive { color: #6b7280; border-bottom: 4px solid transparent; }
+        .tab-button.inactive:hover { background-color: #f3f4f6; }
+    </style>
+</head>
+<body class="bg-blue-50 h-screen w-screen flex flex-col font-sans">
+
+    <!-- Header & Tabs -->
+    <header class="bg-white shadow-sm flex flex-col relative z-20 h-[15vh]">
+        <div class="flex-1 flex items-center justify-center relative px-4">
+            <h1 class="text-lg md:text-3xl font-bold text-red-600 uppercase tracking-wide">KẾT QUẢ THỬ NGHIỆM</h1>
+            <button onclick="resetGame()" class="absolute right-4 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition border flex items-center gap-2 shadow-sm">
+                <i class="fas fa-redo"></i> <span class="hidden md:inline">Làm mới Trang này</span>
+            </button>
+        </div>
+
+        <nav class="flex h-12 bg-white">
+            <button onclick="switchTab(0)" id="tab-0" class="tab-button active flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer">
+                <i class="fas fa-ship mr-2"></i> Thuyền Gỗ
+            </button>
+            <button onclick="switchTab(1)" id="tab-1" class="tab-button inactive flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer border-l border-r border-gray-200">
+                <i class="fas fa-bottle-water mr-2"></i> Thuyền Chai
+            </button>
+            <button onclick="switchTab(2)" id="tab-2" class="tab-button inactive flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer">
+                <i class="fas fa-triangle-exclamation mr-2"></i> Thuyền Lỗi
+            </button>
+        </nav>
+    </header>
+
+    <!-- Khu vực phông nền chính -->
+    <main class="h-[55vh] flex p-2 md:p-4 gap-2 md:gap-4 relative z-10">
+        <!-- Vùng TRÁI -->
+        <div class="flex-1 rounded-xl shadow-inner relative overflow-hidden ocean-bg">
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-2 shadow-md border border-blue-200 whitespace-nowrap">
+                <span class="text-xs md:text-xl font-bold text-gray-800">Đảm bảo tiêu chí</span>
+                <i class="fas fa-check-circle text-green-500 text-lg md:text-2xl"></i>
+            </div>
+        </div>
+
+        <!-- Vùng PHẢI -->
+        <div class="flex-1 rounded-xl shadow-inner relative overflow-hidden factory-bg">
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-2 shadow-md border border-gray-200 whitespace-nowrap">
+                <span class="text-xs md:text-xl font-bold text-gray-800">Cần cải tiến</span>
+                <i class="fas fa-times-circle text-red-500 text-lg md:text-2xl"></i>
+            </div>
+            <div class="absolute bottom-2 right-2 opacity-80 flex items-end">
+                <div class="w-4 md:w-6 h-12 md:h-16 bg-gray-600 mr-1 flex flex-col justify-end"><div class="h-2 md:h-3 bg-yellow-400 mt-1 mb-1"></div></div>
+                <div class="w-6 md:w-8 h-16 md:h-24 bg-red-500 mr-1 flex flex-col justify-end"></div>
+                <div class="w-4 md:w-6 h-20 md:h-28 bg-gray-800 flex flex-col justify-start"><div class="h-2 md:h-3 w-full bg-yellow-500 mt-2"></div></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Khu vực dòng sông -->
+    <footer class="h-[30vh] river-bg z-10">
+        <div class="river-waves"></div>
+    </footer>
+
+    <!-- LỚP VẼ THUYỀN -->
+    <div id="boat-layer"></div>
+
+    <script>
+        // =========================================================================
+        // 1. CẤU HÌNH DANH SÁCH THUYỀN CHO TỪNG TAB
+        // Giờ đây bạn có thể khai báo link ảnh cho TỪNG CHIẾC THUYỀN RIÊNG BIỆT.
+        // Bạn có thể thêm/bớt tùy ý bằng cách copy dòng { image: 'link_anh' }
+        // =========================================================================
+        
+        const TABS_CONFIG = [
+            // --- TAB 1 (Ví dụ trộn 5 thuyền bằng các link bạn vừa cung cấp) ---
+            [
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+            ],
+            // --- TAB 2 (Bạn có thể tự thay link sau) ---
+            [
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+            ],
+            // --- TAB 3 (Bạn có thể tự thay link sau) ---
+            [
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+            ]
+        ];
+
+        // =========================================================================
+
+        let gameState = { 0: [], 1: [], 2: [] };
+        let activeTab = 0; 
+        let highestZIndex = 100;
+        
+        const boatLayer = document.getElementById('boat-layer');
+        let draggedElement = null;
+        let isDragging = false;
+
+        function initGame() {
+            const savedState = localStorage.getItem('boatGameStateNumbered');
+            if (savedState) {
+                gameState = JSON.parse(savedState);
+                
+                // Kiểm tra xem cấu hình số lượng có bị thay đổi không. Nếu có thì reset lại để nạp ảnh mới.
+                const needsReset = !gameState[0] || gameState[0].length !== TABS_CONFIG[0].length ||
+                                   !gameState[1] || gameState[1].length !== TABS_CONFIG[1].length ||
+                                   !gameState[2] || gameState[2].length !== TABS_CONFIG[2].length;
+
+                if (needsReset) {
+                    generateAllTabsData();
+                }
+            } else {
+                generateAllTabsData();
+            }
+            
+            switchTab(0);
+            setupGlobalEventListeners();
+        }
+
+        function generateAllTabsData() {
+            for (let t = 0; t < TABS_CONFIG.length; t++) {
+                gameState[t] = createBoatsForTab(t);
+            }
+            saveStateToStorage();
+        }
+
+        function createBoatsForTab(tabIndex) {
+            const tabBoatsConfig = TABS_CONFIG[tabIndex];
+            let boatsArray = [];
+            
+            for (let i = 0; i < tabBoatsConfig.length; i++) {
+                // Xếp ngẫu nhiên thuyền ở khu vực sông (Y từ 75% -> 90%)
+                const startXPercent = 5 + (90 / Math.max(1, tabBoatsConfig.length)) * i + (Math.random() * 2 - 1); 
+                const startYPercent = 75 + Math.random() * 10;
+
+                boatsArray.push({
+                    id: `tab${tabIndex}-boat${i}`,
+                    file: tabBoatsConfig[i].image,
+                    x: startXPercent,
+                    y: startYPercent,
+                    number: i + 1 // Lưu số thứ tự (từ 1 đến N)
+                });
+            }
+            return boatsArray;
+        }
+
+        function saveStateToStorage() {
+            localStorage.setItem('boatGameStateNumbered', JSON.stringify(gameState));
+        }
+
+        function switchTab(index) {
+            activeTab = index;
+            for (let i = 0; i <= 2; i++) {
+                const btn = document.getElementById(`tab-${i}`);
+                if (i === activeTab) {
+                    btn.classList.add('active'); btn.classList.remove('inactive');
+                } else {
+                    btn.classList.add('inactive'); btn.classList.remove('active');
+                }
+            }
+            renderBoatsForActiveTab();
+        }
+
+        function resetGame() {
+            if(confirm('Bạn có muốn đưa các thuyền ở trang hiện tại về vị trí dưới sông không?')) {
+                gameState[activeTab] = createBoatsForTab(activeTab);
+                saveStateToStorage();
+                renderBoatsForActiveTab();
+            }
+        }
+
+        function renderBoatsForActiveTab() {
+            boatLayer.innerHTML = ''; 
+            const currentBoats = gameState[activeTab];
+
+            currentBoats.forEach(boatData => {
+                // 1. Tạo Div bao ngoài
+                const wrapper = document.createElement('div');
+                wrapper.id = boatData.id;
+                wrapper.className = 'boat-wrapper';
+                wrapper.style.left = boatData.x + '%';
+                wrapper.style.top = boatData.y + '%';
+                wrapper.style.zIndex = highestZIndex;
+
+                // Gắn sự kiện kéo thả vào Div bao ngoài
+                wrapper.addEventListener('mousedown', handleDragStart);
+                wrapper.addEventListener('touchstart', handleDragStart, { passive: false });
+
+                // 2. Tạo hình ảnh thuyền
+                const img = document.createElement('img');
+                img.src = boatData.file;
+                img.draggable = false; 
+                img.onerror = function() {
+                    this.onerror = null;
+                    this.src = 'https://via.placeholder.com/100?text=' + boatData.file;
+                };
+
+                // 3. Tạo nhãn đánh số thứ tự
+                const badge = document.createElement('div');
+                badge.className = 'boat-number';
+                badge.innerText = boatData.number; // Đưa số vào nhãn
+
+                // 4. Ghép nối lại
+                wrapper.appendChild(img);
+                wrapper.appendChild(badge);
+                boatLayer.appendChild(wrapper);
+            });
+        }
+
+        // ==========================================
+        // LOGIC KÉO THẢ 
+        // ==========================================
+
+        function handleDragStart(e) {
+            e.preventDefault(); 
+            // Lấy chính xác cái wrapper chứ không lấy ảnh bên trong
+            draggedElement = e.currentTarget; 
+            isDragging = true;
+
+            highestZIndex++;
+            draggedElement.style.zIndex = highestZIndex;
+            draggedElement.classList.add('is-dragging');
+
+            moveElementToEvent(e);
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging || !draggedElement) return;
+            e.preventDefault(); 
+            moveElementToEvent(e);
+        }
+
+        function handleDragEnd(e) {
+            if (!isDragging || !draggedElement) return;
+            
+            draggedElement.classList.remove('is-dragging');
+            
+            const boatIndex = gameState[activeTab].findIndex(b => b.id === draggedElement.id);
+            if (boatIndex !== -1) {
+                gameState[activeTab][boatIndex].x = parseFloat(draggedElement.style.left);
+                gameState[activeTab][boatIndex].y = parseFloat(draggedElement.style.top);
+                saveStateToStorage();
+            }
+            
+            isDragging = false;
+            draggedElement = null;
+        }
+
+        function moveElementToEvent(e) {
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            const xPercent = (clientX / window.innerWidth) * 100;
+            const yPercent = (clientY / window.innerHeight) * 100;
+
+            const safeX = Math.max(0, Math.min(100, xPercent));
+            const safeY = Math.max(0, Math.min(100, yPercent));
+
+            draggedElement.style.left = safeX + '%';
+            draggedElement.style.top = safeY + '%';
+        }
+
+        function setupGlobalEventListeners() {
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        window.onload = initGame;
+
+    </script>
+</body>
+</html>
