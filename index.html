@@ -1,11 +1,11 @@
 <!--
   * Tên file: index.html
-  * Vị trí lưu: Thư mục gốc của project (cùng cấp với các file ảnh 1748.jpg, 1749.jpg, 1750.jpg)
+  * Vị trí lưu: Thư mục gốc của project (cùng cấp với các file ảnh 1748-removebg-preview.png...)
   * Chức năng cơ bản:
     - Trò chơi kéo thả phân loại thuyền (3 Tab).
     - Thuyền thả tự do theo tọa độ, lưu vị trí qua LocalStorage.
     - CÓ ĐÁNH SỐ THỨ TỰ trên từng thuyền.
-    - CÓ THỂ TỰ THAY ĐỔI SỐ LƯỢNG thuyền dễ dàng trong phần Cấu hình.
+    - Đã phóng to font chữ Tiêu chí và ép nền trong suốt cho ảnh PNG.
 -->
 <!DOCTYPE html>
 <html lang="vi">
@@ -22,7 +22,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PL Thuyền">
-    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp">
+    <link rel="apple-touch-icon" href="1748-removebg-preview.png">
     <!-- File Manifest được nhúng trực tiếp để giữ project ở dạng 1 file duy nhất -->
     <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Tr%C3%B2%20Ch%C6%A1i%20Ph%C3%A2n%20Lo%E1%BA%A1i%20Thuy%E1%BB%81n%22%2C%22short_name%22%3A%22PL%20Thuy%E1%BB%81n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23eff6ff%22%2C%22theme_color%22%3A%22%23eff6ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fniks9support%2FP0001%40main%2F2026%2F05%2F20260512_172554_f3fb6_min.webp%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fwebp%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
 
@@ -68,6 +68,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            background: transparent; /* Ép nền trong suốt */
         }
 
         @media (min-width: 768px) {
@@ -87,6 +88,8 @@
             height: 100%;
             object-fit: contain;
             pointer-events: none; /* Tránh giật lag khi kéo chuột vào ảnh */
+            background-color: transparent !important; /* Ép buộc trình duyệt không tạo nền */
+            border: none;
         }
 
         /* NHÃN ĐÁNH SỐ THỨ TỰ TRÊN THUYỀN */
@@ -156,17 +159,19 @@
     <main class="h-[55vh] flex p-2 md:p-4 gap-2 md:gap-4 relative z-10">
         <!-- Vùng TRÁI -->
         <div class="flex-1 rounded-xl shadow-inner relative overflow-hidden ocean-bg">
-            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-2 shadow-md border border-blue-200 whitespace-nowrap">
-                <span class="text-xs md:text-xl font-bold text-gray-800">Đảm bảo tiêu chí</span>
-                <i class="fas fa-check-circle text-green-500 text-lg md:text-2xl"></i>
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-lg flex items-center gap-3 shadow-md border border-blue-200 whitespace-nowrap">
+                <!-- ĐÃ TĂNG KÍCH THƯỚC CHỮ TẠI ĐÂY (text-base md:text-2xl) -->
+                <span class="text-base md:text-4xl font-bold text-gray-800">Đảm bảo tiêu chí</span>
+                <i class="fas fa-check-circle text-green-500 text-xl md:text-4xl"></i>
             </div>
         </div>
 
         <!-- Vùng PHẢI -->
         <div class="flex-1 rounded-xl shadow-inner relative overflow-hidden factory-bg">
-            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1.5 md:px-4 md:py-2 rounded-lg flex items-center gap-2 shadow-md border border-gray-200 whitespace-nowrap">
-                <span class="text-xs md:text-xl font-bold text-gray-800">Cần cải tiến</span>
-                <i class="fas fa-times-circle text-red-500 text-lg md:text-2xl"></i>
+            <div class="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-lg flex items-center gap-3 shadow-md border border-gray-200 whitespace-nowrap">
+                <!-- ĐÃ TĂNG KÍCH THƯỚC CHỮ TẠI ĐÂY (text-base md:text-2xl) -->
+                <span class="text-base md:text-4xl font-bold text-gray-800">Cần cải tiến</span>
+                <i class="fas fa-times-circle text-red-500 text-xl md:text-4xl"></i>
             </div>
             <div class="absolute bottom-2 right-2 opacity-80 flex items-end">
                 <div class="w-4 md:w-6 h-12 md:h-16 bg-gray-600 mr-1 flex flex-col justify-end"><div class="h-2 md:h-3 bg-yellow-400 mt-1 mb-1"></div></div>
@@ -187,49 +192,47 @@
     <script>
         // =========================================================================
         // 1. CẤU HÌNH DANH SÁCH THUYỀN CHO TỪNG TAB
-        // Giờ đây bạn có thể khai báo link ảnh cho TỪNG CHIẾC THUYỀN RIÊNG BIỆT.
-        // Bạn có thể thêm/bớt tùy ý bằng cách copy dòng { image: 'link_anh' }
         // =========================================================================
         
         const TABS_CONFIG = [
-            // --- TAB 1 (Ví dụ trộn 5 thuyền bằng các link bạn vừa cung cấp) ---
+            // --- TAB 1 ---
             [
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172538_dd6a8_min.webp' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
+                { image: '1750-removebg-preview.png' },
             ],
-            // --- TAB 2 (Bạn có thể tự thay link sau) ---
+            // --- TAB 2 ---
             [
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172535_a0016_min.webp' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
+                { image: '1749-removebg-preview.png' },
             ],
-            // --- TAB 3 (Bạn có thể tự thay link sau) ---
+            // --- TAB 3 ---
             [
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
-                { image: 'https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
+                { image: '1748-removebg-preview.png' },
             ]
         ];
 
@@ -248,7 +251,6 @@
             if (savedState) {
                 gameState = JSON.parse(savedState);
                 
-                // Kiểm tra xem cấu hình số lượng có bị thay đổi không. Nếu có thì reset lại để nạp ảnh mới.
                 const needsReset = !gameState[0] || gameState[0].length !== TABS_CONFIG[0].length ||
                                    !gameState[1] || gameState[1].length !== TABS_CONFIG[1].length ||
                                    !gameState[2] || gameState[2].length !== TABS_CONFIG[2].length;
@@ -360,7 +362,6 @@
 
         function handleDragStart(e) {
             e.preventDefault(); 
-            // Lấy chính xác cái wrapper chứ không lấy ảnh bên trong
             draggedElement = e.currentTarget; 
             isDragging = true;
 
