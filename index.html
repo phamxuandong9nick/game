@@ -1,11 +1,11 @@
 <!--
   * Tên file: index.html
-  * Vị trí lưu: Thư mục gốc của project (cùng cấp với các file ảnh 1748-removebg-preview.png...)
+  * Vị trí lưu: Thư mục gốc của project (cùng cấp với các file ảnh 1748.jpg, 1749.jpg, 1750.jpg)
   * Chức năng cơ bản:
     - Trò chơi kéo thả phân loại thuyền (3 Tab).
     - Thuyền thả tự do theo tọa độ, lưu vị trí qua LocalStorage.
     - CÓ ĐÁNH SỐ THỨ TỰ trên từng thuyền.
-    - Đã phóng to font chữ Tiêu chí và ép nền trong suốt cho ảnh PNG.
+    - SỬA LỖI GIẬT THUYỀN: Sử dụng Offset và dvh để tối ưu cho Mobile.
 -->
 <!DOCTYPE html>
 <html lang="vi">
@@ -14,16 +14,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Trò Chơi Phân Loại Thuyền - Đánh Số</title>
     
-    <!-- CẤU HÌNH WEB APP (PWA) ĐỂ CÀI ĐẶT LÊN MÀN HÌNH ĐIỆN THOẠI -->
-    <!-- Android / Chrome -->
+    <!-- CẤU HÌNH WEB APP (PWA) -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#eff6ff">
-    <!-- iOS / Safari -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="PL Thuyền">
-    <link rel="apple-touch-icon" href="1748-removebg-preview.png">
-    <!-- File Manifest được nhúng trực tiếp để giữ project ở dạng 1 file duy nhất -->
+    <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/niks9support/P0001@main/2026/05/20260512_172554_f3fb6_min.webp">
     <link rel="manifest" href='data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Tr%C3%B2%20Ch%C6%A1i%20Ph%C3%A2n%20Lo%E1%BA%A1i%20Thuy%E1%BB%81n%22%2C%22short_name%22%3A%22PL%20Thuy%E1%BB%81n%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23eff6ff%22%2C%22theme_color%22%3A%22%23eff6ff%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn.jsdelivr.net%2Fgh%2Fniks9support%2FP0001%40main%2F2026%2F05%2F20260512_172554_f3fb6_min.webp%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fwebp%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D'>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,9 +33,10 @@
             -webkit-user-select: none;
             overflow: hidden;
             position: relative;
+            /* Thay thế h-screen bằng dvh để fix lỗi URL bar trên mobile */
+            height: 100dvh; 
         }
 
-        /* Hình nền */
         .ocean-bg { background-image: linear-gradient(to bottom, #87CEEB 0%, #4682B4 50%, #1e3a8a 100%); }
         .factory-bg { background-color: #ffffff; border: 2px solid #e5e7eb; }
         .river-bg { background: #93c5fd; border-top: 4px solid #60a5fa; position: relative; }
@@ -51,24 +49,22 @@
         }
 
         #boat-layer {
-            position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 50;
         }
 
-        /* KHUNG CHỨA THUYỀN VÀ SỐ THỨ TỰ */
         .boat-wrapper {
             position: absolute;
             width: 80px; 
             height: 80px;
             cursor: grab;
             filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
-            pointer-events: auto; /* Để có thể kéo thả */
+            pointer-events: auto;
             transform: translate(-50%, -50%);
             transition: filter 0.2s, transform 0.1s;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: transparent; /* Ép nền trong suốt */
         }
 
         @media (min-width: 768px) {
@@ -82,17 +78,13 @@
             transform: translate(-50%, -50%) scale(1.15);
         }
 
-        /* Hình ảnh thuyền bên trong khung */
         .boat-wrapper img {
             width: 100%;
             height: 100%;
             object-fit: contain;
-            pointer-events: none; /* Tránh giật lag khi kéo chuột vào ảnh */
-            background-color: transparent !important; /* Ép buộc trình duyệt không tạo nền */
-            border: none;
+            pointer-events: none;
         }
 
-        /* NHÃN ĐÁNH SỐ THỨ TỰ TRÊN THUYỀN */
         .boat-number {
             position: absolute;
             bottom: 10%;
@@ -124,33 +116,32 @@
             }
         }
 
-        /* Style cho Tab */
         .tab-button { transition: all 0.3s ease; }
         .tab-button.active { background-color: #eff6ff; color: #2563eb; border-bottom: 4px solid #3b82f6; font-weight: bold; }
         .tab-button.inactive { color: #6b7280; border-bottom: 4px solid transparent; }
         .tab-button.inactive:hover { background-color: #f3f4f6; }
     </style>
 </head>
-<body class="bg-blue-50 h-screen w-screen flex flex-col font-sans">
+<body class="bg-blue-50 w-screen flex flex-col font-sans">
 
     <!-- Header & Tabs -->
-    <header class="bg-white shadow-sm flex flex-col relative z-20 h-[15vh]">
+    <header class="bg-white shadow-sm flex flex-col relative z-20 h-[15%]">
         <div class="flex-1 flex items-center justify-center relative px-4">
             <h1 class="text-lg md:text-3xl font-bold text-red-600 uppercase tracking-wide">KẾT QUẢ THỬ NGHIỆM</h1>
-            <button onclick="resetGame()" class="absolute right-4 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1.5 rounded-full text-xs md:text-sm font-medium transition border flex items-center gap-2 shadow-sm">
-                <i class="fas fa-redo"></i> <span class="hidden md:inline">Làm mới Trang này</span>
+            <button onclick="resetGame()" class="absolute right-4 bg-gray-100 hover:bg-gray-200 text-gray-700 w-8 h-8 md:w-auto md:h-auto md:px-3 md:py-1.5 rounded-full text-xs md:text-sm font-medium transition border flex items-center justify-center gap-2 shadow-sm">
+                <i class="fas fa-redo"></i> <span class="hidden md:inline">Làm mới</span>
             </button>
         </div>
 
         <nav class="flex h-12 bg-white">
             <button onclick="switchTab(0)" id="tab-0" class="tab-button active flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer">
-                <i class="fas fa-ship mr-2"></i> Thuyền Gỗ
+                <i class="fas fa-ship mr-1 md:mr-2"></i> Thuyền Gỗ
             </button>
             <button onclick="switchTab(1)" id="tab-1" class="tab-button inactive flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer border-l border-r border-gray-200">
-                <i class="fas fa-bottle-water mr-2"></i> Thuyền Chai
+                <i class="fas fa-bottle-water mr-1 md:mr-2"></i> Thuyền Chai
             </button>
             <button onclick="switchTab(2)" id="tab-2" class="tab-button inactive flex-1 flex items-center justify-center text-sm md:text-base cursor-pointer">
-                <i class="fas fa-triangle-exclamation mr-2"></i> Thuyền Xốp
+                <i class="fa-solid fa-sailboat mr-1 md:mr-2"></i> Thuyền Xốp
             </button>
         </nav>
     </header>
@@ -182,7 +173,7 @@
     </main>
 
     <!-- Khu vực dòng sông -->
-    <footer class="h-[30vh] river-bg z-10">
+    <footer class="h-[30%] river-bg z-10">
         <div class="river-waves"></div>
     </footer>
 
@@ -191,7 +182,7 @@
 
     <script>
         // =========================================================================
-        // 1. CẤU HÌNH DANH SÁCH THUYỀN CHO TỪNG TAB
+        // CẤU HÌNH DANH SÁCH THUYỀN
         // =========================================================================
         
         const TABS_CONFIG = [
@@ -243,18 +234,19 @@
         let draggedElement = null;
         let isDragging = false;
 
+        // Biến lưu độ lệch (offset) giữa điểm chạm và tọa độ thực của thuyền
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+
         function initGame() {
             const savedState = localStorage.getItem('boatGameStateNumbered');
             if (savedState) {
                 gameState = JSON.parse(savedState);
-                
                 const needsReset = !gameState[0] || gameState[0].length !== TABS_CONFIG[0].length ||
                                    !gameState[1] || gameState[1].length !== TABS_CONFIG[1].length ||
                                    !gameState[2] || gameState[2].length !== TABS_CONFIG[2].length;
 
-                if (needsReset) {
-                    generateAllTabsData();
-                }
+                if (needsReset) generateAllTabsData();
             } else {
                 generateAllTabsData();
             }
@@ -275,16 +267,15 @@
             let boatsArray = [];
             
             for (let i = 0; i < tabBoatsConfig.length; i++) {
-                // Xếp ngẫu nhiên thuyền ở khu vực sông (Y từ 75% -> 90%)
                 const startXPercent = 5 + (90 / Math.max(1, tabBoatsConfig.length)) * i + (Math.random() * 2 - 1); 
-                const startYPercent = 75 + Math.random() * 10;
+                const startYPercent = 80 + Math.random() * 10;
 
                 boatsArray.push({
                     id: `tab${tabIndex}-boat${i}`,
                     file: tabBoatsConfig[i].image,
                     x: startXPercent,
                     y: startYPercent,
-                    number: i + 1 // Lưu số thứ tự (từ 1 đến N)
+                    number: i + 1 
                 });
             }
             return boatsArray;
@@ -320,7 +311,6 @@
             const currentBoats = gameState[activeTab];
 
             currentBoats.forEach(boatData => {
-                // 1. Tạo Div bao ngoài
                 const wrapper = document.createElement('div');
                 wrapper.id = boatData.id;
                 wrapper.className = 'boat-wrapper';
@@ -328,11 +318,9 @@
                 wrapper.style.top = boatData.y + '%';
                 wrapper.style.zIndex = highestZIndex;
 
-                // Gắn sự kiện kéo thả vào Div bao ngoài
                 wrapper.addEventListener('mousedown', handleDragStart);
                 wrapper.addEventListener('touchstart', handleDragStart, { passive: false });
 
-                // 2. Tạo hình ảnh thuyền
                 const img = document.createElement('img');
                 img.src = boatData.file;
                 img.draggable = false; 
@@ -341,12 +329,10 @@
                     this.src = 'https://via.placeholder.com/100?text=' + boatData.file;
                 };
 
-                // 3. Tạo nhãn đánh số thứ tự
                 const badge = document.createElement('div');
                 badge.className = 'boat-number';
-                badge.innerText = boatData.number; // Đưa số vào nhãn
+                badge.innerText = boatData.number;
 
-                // 4. Ghép nối lại
                 wrapper.appendChild(img);
                 wrapper.appendChild(badge);
                 boatLayer.appendChild(wrapper);
@@ -354,7 +340,7 @@
         }
 
         // ==========================================
-        // LOGIC KÉO THẢ 
+        // LOGIC KÉO THẢ TỐI ƯU CHO MOBILE
         // ==========================================
 
         function handleDragStart(e) {
@@ -366,13 +352,43 @@
             draggedElement.style.zIndex = highestZIndex;
             draggedElement.classList.add('is-dragging');
 
-            moveElementToEvent(e);
+            // Tính toán tọa độ điểm chạm trên màn hình (đổi ra %)
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            const touchXPercent = (clientX / window.innerWidth) * 100;
+            const touchYPercent = (clientY / window.innerHeight) * 100;
+
+            // Lấy tọa độ hiện tại của thuyền (đang lưu dạng %)
+            const currentLeft = parseFloat(draggedElement.style.left) || 0;
+            const currentTop = parseFloat(draggedElement.style.top) || 0;
+
+            // Lưu lại độ lệch giữa điểm chạm ngón tay và vị trí thực của thuyền
+            // Việc này giúp thuyền không bị giật vào trung tâm khi mới chạm
+            dragOffsetX = currentLeft - touchXPercent;
+            dragOffsetY = currentTop - touchYPercent;
         }
 
         function handleDragMove(e) {
             if (!isDragging || !draggedElement) return;
             e.preventDefault(); 
-            moveElementToEvent(e);
+            
+            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+            const touchXPercent = (clientX / window.innerWidth) * 100;
+            const touchYPercent = (clientY / window.innerHeight) * 100;
+
+            // Cập nhật vị trí mới = Vị trí ngón tay + Độ lệch ban đầu
+            const newLeft = touchXPercent + dragOffsetX;
+            const newTop = touchYPercent + dragOffsetY;
+
+            // Giới hạn không cho kéo ra ngoài viền màn hình
+            const safeX = Math.max(0, Math.min(100, newLeft));
+            const safeY = Math.max(0, Math.min(100, newTop));
+
+            draggedElement.style.left = safeX + '%';
+            draggedElement.style.top = safeY + '%';
         }
 
         function handleDragEnd(e) {
@@ -389,20 +405,6 @@
             
             isDragging = false;
             draggedElement = null;
-        }
-
-        function moveElementToEvent(e) {
-            const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
-            const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
-
-            const xPercent = (clientX / window.innerWidth) * 100;
-            const yPercent = (clientY / window.innerHeight) * 100;
-
-            const safeX = Math.max(0, Math.min(100, xPercent));
-            const safeY = Math.max(0, Math.min(100, yPercent));
-
-            draggedElement.style.left = safeX + '%';
-            draggedElement.style.top = safeY + '%';
         }
 
         function setupGlobalEventListeners() {
